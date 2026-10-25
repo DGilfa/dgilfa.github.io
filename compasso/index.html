@@ -82,6 +82,18 @@ function url(uf,e){return direct+e+"/dados/"+uf+"/"+uf+"-c0001-e00"+e+"-u.json"}
 function toast(message){var el=$("toast");el.textContent=message;el.style.display="block";setTimeout(function(){el.style.display="none"},5500)}
 async function getJSON(source){var endpoints=[source,"https://api.allorigins.win/raw?url="+encodeURIComponent(source),"https://corsproxy.io/?"+encodeURIComponent(source)];var errs=[];
 for(var i=0;i<endpoints.length;i++){try{var ctrl=new AbortController();var timer=setTimeout(function(){ctrl.abort()},i===0?7000:4500);var res;try{res=await fetch(endpoints[i],{cache:"no-store",signal:ctrl.signal})}finally{clearTimeout(timer)};if(!res.ok)throw Error("HTTP "+res.status);var j=await res.json();if(j&&j.contents&&typeof j.contents==="string")j=JSON.parse(j.contents);if(j&&j.carg&&j.s)return j;throw Error("arquivo incompleto")}catch(e){errs.push(e.message)}}throw Error(errs.join("; "))}
+async function fetchSavedSnapshot(){
+try{
+var cacheUrl="https://raw.githubusercontent.com/DGilfa/dgilfa.github.io/main/compasso/live.json?v="+Math.floor(Date.now()/60000);
+var res=await fetch(cacheUrl,{cache:"no-store"});if(!res.ok)return false;
+var data=await res.json();if(!data.second||!data.second.carg)return false;
+var s=snapshot(data.second);if(!s||!Number.isFinite(s.l))return false;
+state.first=data.first||state.first;state.ufs=data.ufs||state.ufs;state.snapshotAt=Date.parse(data.checked_utc||"");
+if(!state.second||!state.lastSuccess)state.second=data.second;
+renderNation();drawColors();if(!state.lastSuccess){setText("live-label","Cópia TSE · até 5 min");$("live-dot").classList.add("ok");}
+return true;
+}catch(e){return false}
+}
 function flatten(d){return (d&&d.carg||[]).flatMap(function(c){return (c.agr||[]).flatMap(function(a){return (a.par||[]).flatMap(function(p){return (p.cand||[]).map(function(x){return {n:String(x.n),votes:num(x.vap),share:num(x.pvap),name:x.nmu||x.nm}})})})})}
 function snapshot(d){if(!d)return null;var c=flatten(d),l=c.find(function(x){return x.n==="13"})||{},f=c.find(function(x){return x.n==="22"})||{},s=d.s||{},e=d.e||{},v=d.v||{};
 var ea=num(e.a),est=num(e.est),ec=num(e.c),vb=num(v.vb),vn=num(v.tvn),tv=num(v.tv);
@@ -118,10 +130,10 @@ function choose(uf){if(uf!=="br"&&!UF[uf])return;state.chosen=uf;$("state-select
 async function loadMap(){try{var response=await fetch("https://cdn.jsdelivr.net/gh/henriquemalvar/br-geojson@main/dist/estados.geojson");if(!response.ok)throw Error("Mapa indisponível");state.geodata=await response.json();if(!window.d3)throw Error("Biblioteca de visualização indisponível");drawMap()}catch(e){$("map-status").textContent="Mapa indisponível nesta conexão. Use o seletor de estados ao lado para navegar.";}}
 async function loadUfs(){var keys=Object.keys(UF),cursor=0;async function worker(){while(cursor<keys.length){var k=keys[cursor++];try{state.ufs[k]=await getJSON(url(k,6258));drawColors()}catch(e){/* sinaliza indisponibilidade, sem dados fictícios */}}}await Promise.all([worker(),worker(),worker()]);drawColors();}
 async function update(){if(state.loading||document.hidden)return;state.loading=true;setText("live-label","Atualizando…");$("refresh").disabled=true;
-try{var results=await Promise.allSettled([getJSON(url("br",6258)),state.first?Promise.resolve(state.first):getJSON(url("br",6257))]);if(results[0].status!=="fulfilled")throw Error("Não foi possível consultar o TSE nesta rede.");state.second=results[0].value;if(results[1].status==="fulfilled")state.first=results[1].value;
+try{await fetchSavedSnapshot();var results=await Promise.allSettled([getJSON(url("br",6258)),state.first?Promise.resolve(state.first):getJSON(url("br",6257))]);if(results[0].status!=="fulfilled")throw Error("Não foi possível consultar o TSE nesta rede.");state.second=results[0].value;if(results[1].status==="fulfilled")state.first=results[1].value;
 state.lastSuccess=Date.now();$("live-dot").classList.add("ok");setText("live-label","TSE · parcial ao vivo");renderNation();renderSelected();try{localStorage.setItem("compasso-nation-cache",JSON.stringify({first:state.first,second:state.second,at:Date.now()}))}catch(e){}
-await loadUfs();
-}catch(err){$("live-dot").classList.remove("ok");setText("live-label","Fonte indisponível");if(!state.second){try{var cached=JSON.parse(localStorage.getItem("compasso-nation-cache"));if(cached&&cached.second){state.first=cached.first;state.second=cached.second;renderNation();setText("live-label","Última leitura salva");setText("update-text","Leitura antiga · não é ao vivo");}}catch(e){} }toast("O TSE não respondeu agora. Números anteriores, se houver, estão identificados.");}
+if(!state.snapshotAt)await loadUfs();
+}catch(err){$("live-dot").classList.remove("ok");setText("live-label",state.second?"Cópia TSE · ver horário":"Fonte indisponível");if(!state.second){try{var cached=JSON.parse(localStorage.getItem("compasso-nation-cache"));if(cached&&cached.second){state.first=cached.first;state.second=cached.second;renderNation();setText("live-label","Última leitura salva");setText("update-text","Leitura antiga · não é ao vivo");}}catch(e){} }toast("O TSE não respondeu agora. Números anteriores, se houver, estão identificados.");}
 finally{state.loading=false;$("refresh").disabled=false}}
 Object.keys(UF).sort(function(a,b){return UF[a].localeCompare(UF[b],"pt-BR")}).forEach(function(u){var o=document.createElement("option");o.value=u;o.textContent=UF[u]+" · "+u.toUpperCase();$("state-select").appendChild(o)});
 $("state-select").addEventListener("change",function(){choose(this.value)});
