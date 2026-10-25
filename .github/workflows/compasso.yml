@@ -1,0 +1,45 @@
+name: Compasso · atualizar TSE e publicar
+on:
+  push:
+    paths:
+      - compasso/**
+      - .github/workflows/compasso.yml
+  workflow_dispatch:
+  schedule:
+    - cron: '*/5 * 25,26 10 *'
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+concurrency:
+  group: compasso-deploy
+  cancel-in-progress: false
+jobs:
+  refresh:
+    if: github.event_name != 'schedule' || github.repository == 'DGilfa/dgilfa.github.io'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Coletar números oficiais (somente outubro de 2026)
+        run: |
+          if [ "$(date -u +%Y)" = "2026" ]; then
+            python3 compasso/sync.py
+          fi
+      - name: Salvar cópia verificada
+        run: |
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git config user.name 'github-actions[bot]'
+          git add compasso/live.json || true
+          git diff --cached --quiet || (git commit -m 'chore(compasso): atualizar apuração TSE' && git push)
+      - name: Preparar GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Empacotar site estático
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - name: Publicar site
+        uses: actions/deploy-pages@v4
