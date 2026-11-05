@@ -8,7 +8,7 @@ Atuo com tecnologia desde 2008, conectando necessidades de negócio ao desenvolv
 
 ## Trajetória
 
-- **Empreendedorismo:** já tive as empresas **Padroom** e **Winde3** e participei do desenvolvimento de sistemas como **Cia Petite** e **Cia Veicular**.
+- **Empreendedorismo:** fui dono, CEO e fundador das empresas **Winde3** e **Padroom**, e fundador dos projetos **Cia Petite** e **Cia Veicular**.
 - **Detran-RR:** servidor público concursado desde **2014**, com atuação na Divisão de Tecnologia da Informação, em análise de requisitos, evolução de sistemas e validação de soluções.
 - **Heuria:** CEO e fundador, com atuação no desenvolvimento de sistemas web, automações, integrações e aplicações de IA para necessidades de negócio.
 
@@ -32,13 +32,13 @@ O projeto será implantado e validado por etapas. Cada capacidade deve ser apres
 
 - Programação e desenvolvimento de aplicações web, portais e sites.
 - Análise de sistemas, requisitos e regras de negócio.
-- Integrações e automação de processos.
+- Integrações com APIs e n8n, automação de processos e criação de agentes de IA.
 - Inteligência artificial aplicada a sistemas e operações.
 - Documentação, publicação e evolução de produtos digitais.
 
 ## Tecnologias utilizadas em projetos
 
-PHP · Laravel · WordPress · JavaScript · TypeScript · React · Next.js · MySQL · PostgreSQL · Git · GitHub
+HTML · CSS · PHP · Laravel · WordPress · JavaScript · TypeScript · React · Next.js · SQL · MySQL · PostgreSQL · Git · GitHub · Cloudflare · n8n
 
 ## Como trabalho
 
